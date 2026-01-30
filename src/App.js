@@ -382,6 +382,10 @@ function App() {
                   
                   const ehMeuVoto = jogador.id === meuId;
                   
+                  const totalVotos = contagem[0] + contagem[5] + contagem[10];
+                  const pontuacaoMaisVotada = contagem[10] >= contagem[5] && contagem[10] >= contagem[0] ? 10 :
+                                               contagem[5] >= contagem[0] ? 5 : 0;
+                  
                   return (
                     <div key={jogador.id} className="item-validacao">
                       <div className="resposta-info">
@@ -389,39 +393,38 @@ function App() {
                         <span className="resposta-texto">{resposta}</span>
                       </div>
                       <div className="votos-info">
-                        <span className="voto-count">
-                          <span>0</span>
-                          <span>{contagem[0]}</span>
-                        </span>
-                        <span className="voto-count">
-                          <span>5</span>
-                          <span>{contagem[5]}</span>
-                        </span>
-                        <span className="voto-count">
-                          <span>10</span>
-                          <span>{contagem[10]}</span>
-                        </span>
+                        <span className="votos-info-titulo">PONTUAÇÃO:</span>
+                        <span className="votos-total">{totalVotos > 0 ? pontuacaoMaisVotada : 0}</span>
                       </div>
                       {!ehMeuVoto && (
                         <div className="botoes-voto">
-                          <button 
-                            className={`btn-voto ${votosValidacao[jogador.id] === 0 ? 'selecionado' : ''}`}
-                            onClick={() => votar(jogador.id, 0)}
-                          >
-                            0pts
-                          </button>
-                          <button 
-                            className={`btn-voto ${votosValidacao[jogador.id] === 5 ? 'selecionado' : ''}`}
-                            onClick={() => votar(jogador.id, 5)}
-                          >
-                            5pts
-                          </button>
-                          <button 
-                            className={`btn-voto ${votosValidacao[jogador.id] === 10 ? 'selecionado' : ''}`}
-                            onClick={() => votar(jogador.id, 10)}
-                          >
-                            10pts
-                          </button>
+                          <div className="btn-voto-container">
+                            <button 
+                              className={`btn-voto ${votosValidacao[jogador.id] === 0 ? 'selecionado' : ''}`}
+                              onClick={() => votar(jogador.id, 0)}
+                            >
+                              0pts
+                            </button>
+                            <span className="voto-count-badge">{contagem[0]}</span>
+                          </div>
+                          <div className="btn-voto-container">
+                            <button 
+                              className={`btn-voto ${votosValidacao[jogador.id] === 5 ? 'selecionado' : ''}`}
+                              onClick={() => votar(jogador.id, 5)}
+                            >
+                              5pts
+                            </button>
+                            <span className="voto-count-badge">{contagem[5]}</span>
+                          </div>
+                          <div className="btn-voto-container">
+                            <button 
+                              className={`btn-voto ${votosValidacao[jogador.id] === 10 ? 'selecionado' : ''}`}
+                              onClick={() => votar(jogador.id, 10)}
+                            >
+                              10pts
+                            </button>
+                            <span className="voto-count-badge">{contagem[10]}</span>
+                          </div>
                         </div>
                       )}
                       {ehMeuVoto && (
