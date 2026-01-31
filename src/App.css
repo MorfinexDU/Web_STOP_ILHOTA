@@ -58,6 +58,7 @@ body, html {
 
 .nickname-container {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
@@ -95,6 +96,12 @@ body, html {
 
 .nickname-box input::placeholder {
   color: rgba(255, 215, 0, 0.5);
+}
+
+.input-editar-categoria {
+  margin-bottom: 0 !important;
+  padding: 8px !important;
+  font-size: 1rem !important;
 }
 
 .nickname-box button {
@@ -173,7 +180,7 @@ body, html {
 
 .ranking-item-placar .nick {
   color: #FFD700;
-  font-weight: bold;
+  font-weight: normal;
   font-size: 1rem;
 }
 
@@ -183,7 +190,7 @@ body, html {
 
 .ranking-item-placar .pontos {
   color: #00FF00;
-  font-weight: bold;
+  font-weight: normal;
   font-size: 1.1rem;
 }
 
@@ -257,7 +264,7 @@ body, html {
 .letra-sorteada span {
   color: #00CED1;
   font-size: 3rem;
-  font-weight: bold;
+  font-weight: normal;
   display: inline-block;
   transition: all 0.1s ease;
   text-shadow: 3px 3px 0px #000, -2px -2px 0px #FF1493;
@@ -280,7 +287,7 @@ body, html {
 .sorteando-texto {
   color: #FF1493;
   font-size: 1.2rem;
-  font-weight: bold;
+  font-weight: normal;
   margin-top: 10px;
   animation: blink 1s infinite;
   text-shadow: 2px 2px 0px #000;
@@ -314,7 +321,7 @@ body, html {
 
 .campo label {
   display: block;
-  font-weight: bold;
+  font-weight: normal;
   color: #FFD700;
   margin-bottom: 4px;
   font-size: 0.9rem;
@@ -362,7 +369,7 @@ body, html {
   border: 3px solid #FFD700;
   padding: 15px 40px;
   font-size: 1.5rem;
-  font-weight: bold;
+  font-weight: normal;
   border-radius: 5px;
   cursor: pointer;
   box-shadow: 5px 5px 0px rgba(0, 0, 0, 0.5);
@@ -422,7 +429,7 @@ body, html {
   font-family: 'Impact', sans-serif;
   text-transform: uppercase;
   letter-spacing: 2px;
-  font-weight: bold;
+  font-weight: normal;
   transform: skew(-5deg);
 }
 
@@ -463,7 +470,7 @@ body, html {
 
 .nome-jogador {
   color: #FFD700;
-  font-weight: bold;
+  font-weight: normal;
   text-align: center;
   margin-bottom: 8px;
   font-size: 0.9rem;
@@ -505,7 +512,7 @@ body, html {
 
 .total-jogador {
   color: #FFD700;
-  font-weight: bold;
+  font-weight: normal;
   text-align: center;
   margin-top: 8px;
   padding-top: 5px;
@@ -564,7 +571,7 @@ body, html {
 
 .ranking-item .posicao {
   font-size: 2rem;
-  font-weight: bold;
+  font-weight: normal;
   color: #00CED1;
   min-width: 50px;
   text-shadow: 2px 2px 0px #000;
@@ -576,7 +583,7 @@ body, html {
 
 .ranking-item .nome {
   flex: 1;
-  font-weight: bold;
+  font-weight: normal;
   text-transform: uppercase;
   letter-spacing: 1px;
   color: #FFD700;
@@ -584,7 +591,7 @@ body, html {
 
 .ranking-item .pontos {
   font-size: 1.5rem;
-  font-weight: bold;
+  font-weight: normal;
   color: #00FF00;
   text-shadow: 2px 2px 0px #000;
 }
@@ -606,7 +613,7 @@ body, html {
   font-family: 'Impact', sans-serif;
   text-transform: uppercase;
   letter-spacing: 2px;
-  font-weight: bold;
+  font-weight: normal;
   box-shadow: 5px 5px 0px rgba(0, 0, 0, 0.5);
   transform: skew(-5deg);
 }
@@ -732,7 +739,7 @@ body, html {
 .titulo-respostas {
   color: #00CED1;
   font-size: 0.9rem;
-  font-weight: bold;
+  font-weight: normal;
   margin-bottom: 8px;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -750,12 +757,28 @@ body, html {
 
 .cat-nome {
   color: #FFD700;
-  font-weight: bold;
+  font-weight: normal;
 }
 
 .cat-resposta {
   color: #00CED1;
   margin-left: 5px;
+}
+
+.entrada-sala-container {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.entrada-sala-container .input-codigo {
+  flex: 1;
+  margin-bottom: 0 !important;
+}
+
+.entrada-sala-container .btn-entrar {
+  width: auto;
+  white-space: nowrap;
 }
 
 .btn-criar, .btn-entrar {
@@ -772,6 +795,10 @@ body, html {
   text-transform: uppercase;
   letter-spacing: 2px;
   box-shadow: 3px 3px 0px rgba(0, 0, 0, 0.5);
+  margin-bottom: 0;
+}
+
+.btn-criar {
   margin-bottom: 10px;
 }
 
@@ -779,13 +806,12 @@ body, html {
   transform: scale(1.05) rotate(-2deg);
 }
 
-.divisor {
-  text-align: center;
-  color: #FFD700;
-  font-size: 1.5rem;
-  font-weight: bold;
-  margin: 20px 0;
-  letter-spacing: 3px;
+.divisor-linha {
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #FFD700, transparent);
+  margin: 25px 0;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
 }
 
 .input-codigo {
@@ -794,7 +820,7 @@ body, html {
   font-size: 1.5rem;
   border: 3px solid #00CED1;
   border-radius: 5px;
-  margin-bottom: 10px;
+  margin-bottom: 0 !important;
   background: rgba(0, 0, 0, 0.7);
   color: #00CED1;
   font-family: 'Impact', sans-serif;
@@ -824,9 +850,17 @@ body, html {
   border-radius: 5px;
   border: 2px solid #00CED1;
   color: #00CED1;
-  font-weight: bold;
+  font-weight: normal;
   letter-spacing: 3px;
   box-shadow: 3px 3px 0px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  transition: all 0.2s;
+  user-select: none;
+}
+
+.codigo-sala:hover {
+  background: rgba(0, 206, 209, 0.2);
+  transform: scale(1.05);
 }
 
 .acompanhamento-rodada {
@@ -860,9 +894,9 @@ body, html {
   padding: 6px 4px;
   text-align: center;
   font-family: Arial, sans-serif;
-  font-weight: bold;
+  font-weight: normal;
   text-transform: uppercase;
-  border: 1px solid #FFD700;
+  border: none;
   font-size: 0.7rem;
   position: sticky;
   top: 0;
@@ -872,7 +906,8 @@ body, html {
 .tabela-acompanhamento td {
   padding: 4px 3px;
   text-align: center;
-  border: 1px solid #00CED1;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   background: rgba(0, 0, 0, 0.5);
   color: #FFD700;
   font-size: 0.7rem;
@@ -880,21 +915,30 @@ body, html {
   font-family: Arial, sans-serif;
 }
 
+.tabela-acompanhamento tr.nova-letra td {
+  border-top: 2px solid transparent;
+  box-shadow: 0 -1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.tabela-acompanhamento tr.nova-letra .letra-col {
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.5), rgba(100, 100, 100, 0.3), rgba(0, 0, 0, 0.5));
+}
+
 .tabela-acompanhamento .letra-col {
-  font-weight: bold;
+  font-weight: normal;
   color: #FF1493;
   font-size: 1rem;
 }
 
 .tabela-acompanhamento .nick-col {
-  font-weight: bold;
+  font-weight: normal;
   text-align: left !important;
   color: #00CED1;
   min-width: 100px;
 }
 
 .tabela-acompanhamento .pts-col {
-  font-weight: bold;
+  font-weight: normal;
   color: #00FF00;
   font-size: 0.9rem;
 }
@@ -948,11 +992,11 @@ body, html {
 }
 
 .item-validacao {
-  background: rgba(255, 20, 147, 0.2);
-  border: 2px solid white;
+  background: rgb(61 61 61);
+  border: 1px solid white;
   border-radius: 8px;
   padding: 15px 20px;
-  margin-bottom: 12px;
+  margin-bottom: 5px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -970,12 +1014,13 @@ body, html {
   color: white;
   font-size: 1.1rem;
   white-space: nowrap;
+  font-weight: normal;
 }
 
 .resposta-texto {
   color: #FFD700;
   font-size: 1.3rem;
-  font-weight: bold;
+  font-weight: normal;
 }
 
 .votos-info {
@@ -988,13 +1033,13 @@ body, html {
 .votos-info-titulo {
   color: white;
   font-size: 1rem;
-  font-weight: bold;
+  font-weight: normal;
 }
 
 .votos-total {
   color: #00FF00;
   font-size: 1.2rem;
-  font-weight: bold;
+  font-weight: normal;
   margin-left: 5px;
 }
 
@@ -1036,9 +1081,10 @@ body, html {
 }
 
 .voto-count-badge {
+  font-family: monospace;
   font-size: 0.85rem;
-  color: #00CED1;
-  font-weight: bold;
+  color: #00fff5;
+  font-weight: normal;
 }
 
 .btn-voto:hover {
@@ -1068,7 +1114,7 @@ body, html {
   font-family: 'Impact', sans-serif;
   text-transform: uppercase;
   letter-spacing: 2px;
-  font-weight: bold;
+  font-weight: normal;
   transition: transform 0.2s;
 }
 
@@ -1095,7 +1141,7 @@ body, html {
 }
 
 .painel-acompanhamento {
-  width: 550px;
+  flex: 1;
   background: rgba(0, 0, 0, 0.9);
   border-radius: 10px;
   padding: 15px;
@@ -1130,3 +1176,29 @@ body, html {
   font-style: italic;
   margin-top: 10px;
 }
+
+
+.rodape-noticias {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.95);
+  border-top: 3px solid #FFD700;
+  padding: 10px 0;
+  overflow: hidden;
+  z-index: 100;
+}
+
+.ticker-wrapper {
+  width: 100%;
+  overflow: hidden;
+}
+
+.ticker-content { display: flex; white-space: nowrap; animation: scroll-left 30s linear infinite; color: white; font-size: 1.1rem; font-family: Arial, sans-serif; }
+
+.ticker-item { display: inline-block; margin-right: 50px; padding: 0 20px; flex-shrink: 0; }
+
+.ticker-item strong { color: #FFD700; font-weight: normal; }
+
+@keyframes scroll-left { from { transform: translateX(0); } to { transform: translateX(-200%); } }

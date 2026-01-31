@@ -31,11 +31,15 @@ function App() {
   const [jogoFinalizado, setJogoFinalizado] = useState(false);
   const [respostasRodadaAtual, setRespostasRodadaAtual] = useState({});
   const [categoriasSelecionadas, setCategoriasSelecionadas] = useState([]);
+  const [categoriasRenomeadas, setCategoriasRenomeadas] = useState({});
   const [selecionandoCategorias, setSelecionandoCategorias] = useState(false);
   const [emValidacao, setEmValidacao] = useState(false);
   const [categoriaValidando, setCategoriaValidando] = useState(null);
   const [votosValidacao, setVotosValidacao] = useState({});
   const [votosGerais, setVotosGerais] = useState({});
+  const [editandoCategoria, setEditandoCategoria] = useState(null);
+  const [nomeEditando, setNomeEditando] = useState('');
+  const [codigoCopiado, setCodigoCopiado] = useState(false);
 
   useEffect(() => {
     socket.on('connect', () => {
@@ -205,16 +209,26 @@ function App() {
   };
 
   const toggleCategoria = (cat) => {
-    if (categoriasSelecionadas.includes(cat)) {
-      setCategoriasSelecionadas(categoriasSelecionadas.filter(c => c !== cat));
+    const categoriaAtual = Object.keys(categoriasRenomeadas).find(k => categoriasRenomeadas[k] === cat) || cat;
+    if (categoriasSelecionadas.includes(categoriaAtual)) {
+      setCategoriasSelecionadas(categoriasSelecionadas.filter(c => c !== categoriaAtual));
     } else if (categoriasSelecionadas.length < 10) {
-      setCategoriasSelecionadas([...categoriasSelecionadas, cat]);
+      setCategoriasSelecionadas([...categoriasSelecionadas, categoriaAtual]);
     }
+  };
+
+  const renomearCategoria = (categoriaOriginal, novoNome) => {
+    if (novoNome && novoNome.trim()) {
+      setCategoriasRenomeadas({...categoriasRenomeadas, [categoriaOriginal]: novoNome.trim()});
+    }
+    setEditandoCategoria(null);
+    setNomeEditando('');
   };
 
   const confirmarCategorias = () => {
     if (categoriasSelecionadas.length >= 3) {
-      socket.emit('definirCategorias', { codigoSala, categorias: categoriasSelecionadas });
+      const categoriasFinais = categoriasSelecionadas.map(cat => categoriasRenomeadas[cat] || cat);
+      socket.emit('definirCategorias', { codigoSala, categorias: categoriasFinais });
     }
   };
 
@@ -233,12 +247,69 @@ function App() {
 
   const souDono = meuId === donoSala;
 
+  const gerarNoticias = () => {
+    const noticias = [];
+    const jogadoresArray = Object.values(jogadores);
+    
+    if (jogadoresArray.length === 0) return [];
+
+    // Maior pontuador da última rodada
+    const jogadoresComRespostas = jogadoresArray.filter(j => j.respostas && j.respostas.length > 0);
+    if (jogadoresComRespostas.length > 0) {
+      const ultimaRodada = jogadoresComRespostas.map(j => ({
+        nick: j.nickname,
+        pontos: j.respostas[j.respostas.length - 1]?.total || 0
+      })).sort((a, b) => b.pontos - a.pontos);
+      
+      if (ultimaRodada[0].pontos > 0) {
+        noticias.push(`🏆 ${ultimaRodada[0].nick} foi o MAIOR PONTUADOR da última rodada com ${ultimaRodada[0].pontos} pontos!`);
+      }
+      
+      if (ultimaRodada[ultimaRodada.length - 1].pontos >= 0) {
+        noticias.push(`😢 ${ultimaRodada[ultimaRodada.length - 1].nick} teve o PIOR DESEMPENHO na última rodada com ${ultimaRodada[ultimaRodada.length - 1].pontos} pontos`);
+      }
+    }
+
+    // Melhor das últimas 3 rodadas
+    const ultimas3 = jogadoresComRespostas.map(j => ({
+      nick: j.nickname,
+      pontos: j.respostas.slice(-3).reduce((sum, r) => sum + (r.total || 0), 0)
+    })).sort((a, b) => b.pontos - a.pontos);
+    
+    if (ultimas3.length > 0 && ultimas3[0].pontos > 0) {
+      noticias.push(`🔥 ${ultimas3[0].nick} está EM CHAMAS com ${ultimas3[0].pontos} pontos nas últimas 3 rodadas!`);
+    }
+
+    // Líder geral
+    const lider = jogadoresArray.sort((a, b) => b.pontuacaoTotal - a.pontuacaoTotal)[0];
+    if (lider && lider.pontuacaoTotal > 0) {
+      noticias.push(`👑 ${lider.nickname} lidera o jogo com ${lider.pontuacaoTotal} pontos totais!`);
+    }
+
+    // Melhor por categoria
+    categoriasSelecionadas.forEach(cat => {
+      const pontosPorCategoria = {};
+      jogadoresComRespostas.forEach(j => {
+        const total = j.respostas.reduce((sum, r) => sum + (r.pontos[cat] || 0), 0);
+        if (total > 0) pontosPorCategoria[j.nickname] = total;
+      });
+      
+      const melhor = Object.entries(pontosPorCategoria).sort((a, b) => b[1] - a[1])[0];
+      if (melhor) {
+        noticias.push(`⭐ ${melhor[0]} domina em ${cat} com ${melhor[1]} pontos!`);
+      }
+    });
+
+    return noticias;
+  };
+
   if (!entrou && !selecionandoCategorias) {
     return (
       <div className="App">
         <div className="nickname-container">
+          <img src="/mainicon.png" alt="ILHOTA STOP" style={{width: '150px'}} />
+          <h1 style={{color: '#FFD700', textShadow: '3px 3px 0px #000, -1px -1px 0px #FF1493', letterSpacing: '3px', transform: 'skew(-5deg)', marginBottom: '30px'}}>ILHOTA STOP</h1>
           <div className="nickname-box">
-            <h1>🎯 JOGO STOP</h1>
             <input
               type="text"
               placeholder="Digite seu nickname"
@@ -248,17 +319,19 @@ function App() {
             />
             {!criandoSala && !entrandoSala ? (
               <>
+                <div className="divisor-linha"></div>
                 <button onClick={criarSala} className="btn-criar">Criar Sala</button>
-                <div className="divisor">OU</div>
-                <input
-                  type="text"
-                  placeholder="Código da sala"
-                  value={codigoSala}
-                  onChange={(e) => setCodigoSala(e.target.value.toUpperCase())}
-                  maxLength={6}
-                  className="input-codigo"
-                />
-                <button onClick={entrarNaSala} className="btn-entrar">Entrar na Sala</button>
+                <div className="entrada-sala-container">
+                  <input
+                    type="text"
+                    placeholder="Código da sala"
+                    value={codigoSala}
+                    onChange={(e) => setCodigoSala(e.target.value.toUpperCase())}
+                    maxLength={6}
+                    className="input-codigo"
+                  />
+                  <button onClick={entrarNaSala} className="btn-entrar">Entrar</button>
+                </div>
               </>
             ) : (
               <p className="aguardando">Aguardando...</p>
@@ -274,34 +347,115 @@ function App() {
       <div className="App">
         <div className="nickname-container">
           <div className="nickname-box" style={{maxWidth: '600px'}}>
-            <h1>🎯 Selecione as Categorias</h1>
+            <h1><img src="/mainicon.png" alt="icon" style={{width: '40px', verticalAlign: 'middle', marginRight: '10px'}} />Selecione as Categorias</h1>
             <p style={{color: '#00CED1', marginBottom: '10px'}}>Escolha de 3 a 10 categorias</p>
             <p style={{color: '#FFD700', fontSize: '1.3rem', fontWeight: 'bold', marginBottom: '20px'}}>
               {categoriasSelecionadas.length}/10 selecionadas
             </p>
             <div style={{display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', marginBottom: '20px'}}>
-              {CATEGORIAS_DISPONIVEIS.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => toggleCategoria(cat)}
-                  style={{
-                    padding: '15px',
-                    fontSize: '1rem',
-                    background: categoriasSelecionadas.includes(cat) 
-                      ? 'linear-gradient(45deg, #FF1493, #00CED1)' 
-                      : 'rgba(0, 0, 0, 0.7)',
-                    color: categoriasSelecionadas.includes(cat) ? 'white' : '#FFD700',
-                    border: categoriasSelecionadas.includes(cat) ? '2px solid #FFD700' : '2px solid #00CED1',
-                    borderRadius: '5px',
-                    cursor: 'pointer',
-                    fontFamily: 'Impact, sans-serif',
-                    textTransform: 'uppercase',
-                    boxShadow: categoriasSelecionadas.includes(cat) ? '0 0 15px rgba(255, 215, 0, 0.5)' : 'none'
-                  }}
-                >
-                  {cat}
-                </button>
-              ))}
+              {CATEGORIAS_DISPONIVEIS.map((cat) => {
+                const nomeExibido = categoriasRenomeadas[cat] || cat;
+                const estaSelecionada = categoriasSelecionadas.includes(cat);
+                
+                return (
+                  <button
+                    key={cat}
+                    onClick={() => !editandoCategoria && toggleCategoria(cat)}
+                    style={{
+                      padding: '15px',
+                      fontSize: '1rem',
+                      background: estaSelecionada 
+                        ? 'linear-gradient(45deg, #FF1493, #00CED1)' 
+                        : 'rgba(0, 0, 0, 0.7)',
+                      color: estaSelecionada ? 'white' : '#FFD700',
+                      border: estaSelecionada ? '2px solid #FFD700' : '2px solid #00CED1',
+                      borderRadius: '5px',
+                      cursor: editandoCategoria ? 'default' : 'pointer',
+                      fontFamily: 'Impact, sans-serif',
+                      textTransform: 'uppercase',
+                      boxShadow: estaSelecionada ? '0 0 15px rgba(255, 215, 0, 0.5)' : 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      position: 'relative',
+                      height: '50px'
+                    }}
+                  >
+                    {editandoCategoria === cat ? (
+                      <div style={{display: 'flex', gap: '5px', width: '100%', alignItems: 'stretch', height: '100%'}}>
+                        <input
+                          type="text"
+                          className="input-editar-categoria"
+                          value={nomeEditando}
+                          onChange={(e) => setNomeEditando(e.target.value)}
+                          autoFocus
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') renomearCategoria(cat, nomeEditando);
+                            if (e.key === 'Escape') { setEditandoCategoria(null); setNomeEditando(''); }
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                          style={{
+                            width: '80%',
+                            padding: '5px',
+                            fontSize: '0.9rem',
+                            background: 'white',
+                            color: 'black',
+                            border: 'none',
+                            borderRadius: '3px',
+                            fontFamily: 'Impact, sans-serif',
+                            textTransform: 'uppercase',
+                            textAlign: 'center',
+                            boxSizing: 'border-box'
+                          }}
+                        />
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            renomearCategoria(cat, nomeEditando);
+                          }}
+                          style={{
+                            background: '#00FF00',
+                            border: 'none',
+                            borderRadius: '3px',
+                            padding: '5px',
+                            cursor: 'pointer',
+                            fontSize: '1rem',
+                            fontWeight: 'bold',
+                            width: '18%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            boxSizing: 'border-box'
+                          }}
+                        >
+                          ✓
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        {nomeExibido}
+                        {estaSelecionada && (
+                          <span
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditandoCategoria(cat);
+                              setNomeEditando(nomeExibido);
+                            }}
+                            style={{
+                              cursor: 'pointer',
+                              fontSize: '0.9rem',
+                              marginLeft: '5px'
+                            }}
+                          >
+                            ✏️
+                          </span>
+                        )}
+                      </>
+                    )}
+                  </button>
+                );
+              })}
             </div>
             <button 
               onClick={confirmarCategorias}
@@ -337,6 +491,19 @@ function App() {
     const ranking = Object.values(jogadores).sort((a, b) => b.pontuacaoTotal - a.pontuacaoTotal);
     return (
       <div className="App">
+        <header className="App-header">
+          <h1><img src="/mainicon.png" alt="icon" style={{width: '50px', verticalAlign: 'middle', marginRight: '10px'}} />ILHOTA STOP</h1>
+          <div className="info-sala">
+            <span className="codigo-sala" onClick={() => {
+              navigator.clipboard.writeText(codigoSala);
+              setCodigoCopiado(true);
+              setTimeout(() => setCodigoCopiado(false), 2000);
+            }}>
+              Sala: <span style={{color: 'white', textShadow: 'none'}}>{codigoCopiado ? 'Copiado!' : codigoSala}</span>
+            </span>
+            <span className="meu-nickname">Você: {nickname} {souDono && '👑'}</span>
+          </div>
+        </header>
         <div className="resultado-final">
           <h1>🏆 Jogo Finalizado!</h1>
           <div className="ranking">
@@ -451,9 +618,15 @@ function App() {
       )}
 
       <header className="App-header">
-        <h1>🎯 JOGO STOP</h1>
+        <h1><img src="/mainicon.png" alt="icon" style={{width: '50px', verticalAlign: 'middle', marginRight: '10px'}} />ILHOTA STOP</h1>
         <div className="info-sala">
-          <span className="codigo-sala">Sala: {codigoSala}</span>
+          <span className="codigo-sala" onClick={() => {
+            navigator.clipboard.writeText(codigoSala);
+            setCodigoCopiado(true);
+            setTimeout(() => setCodigoCopiado(false), 2000);
+          }}>
+            Sala: <span style={{color: 'white', textShadow: 'none'}}>{codigoCopiado ? 'Copiado!' : codigoSala}</span>
+          </span>
           <span className="meu-nickname">Você: {nickname} {souDono && '👑'}</span>
         </div>
       </header>
@@ -563,20 +736,58 @@ function App() {
                 </tr>
               </thead>
               <tbody>
-                {Object.values(jogadores).flatMap((jogador) => 
-                  jogador.respostas.map((rodada, idx) => (
-                    <tr key={`${jogador.id}-${idx}`}>
-                      <td className="letra-col">{rodada.letra}</td>
-                      <td className="nick-col">
-                        {jogador.nickname} {jogador.id === donoSala && '👑'}
-                      </td>
-                      {categoriasSelecionadas.map(cat => (
-                        <td key={cat} title={rodada.respostas[cat]}>{rodada.respostas[cat] || '-'}</td>
-                      ))}
-                      <td className="pts-col">{rodada.total}</td>
-                    </tr>
-                  ))
-                )}
+                {(() => {
+                  const todasRodadas = [];
+                  Object.values(jogadores).forEach(jogador => {
+                    jogador.respostas.forEach((rodada, idx) => {
+                      todasRodadas.push({ jogador, rodada, indiceRodada: idx });
+                    });
+                  });
+                  
+                  todasRodadas.sort((a, b) => {
+                    if (a.indiceRodada !== b.indiceRodada) return a.indiceRodada - b.indiceRodada;
+                    return a.rodada.letra.localeCompare(b.rodada.letra);
+                  });
+                  
+                  let letraAnterior = null;
+                  let contadorLetra = 0;
+                  const linhasPorLetra = {};
+                  
+                  todasRodadas.forEach(item => {
+                    const letra = item.rodada.letra;
+                    if (!linhasPorLetra[letra]) linhasPorLetra[letra] = 0;
+                    linhasPorLetra[letra]++;
+                  });
+                  
+                  return todasRodadas.map((item, idx) => {
+                    const { jogador, rodada } = item;
+                    const letra = rodada.letra;
+                    const primeiraLetra = letra !== letraAnterior;
+                    
+                    if (primeiraLetra) {
+                      letraAnterior = letra;
+                      contadorLetra = 0;
+                    }
+                    
+                    const mostrarLetra = contadorLetra === 0;
+                    contadorLetra++;
+                    
+                    return (
+                      <tr key={`${jogador.id}-${idx}`} className={primeiraLetra ? 'nova-letra' : ''}>
+                        {mostrarLetra ? (
+                          <td className="letra-col" rowSpan={linhasPorLetra[letra]}>{letra}</td>
+                        ) : null}
+                        <td className="nick-col">
+                          {jogador.nickname} {jogador.id === donoSala && '👑'}
+                        </td>
+                        {categoriasSelecionadas.map(cat => (
+                          <td key={cat} title={rodada.respostas[cat]}>{rodada.respostas[cat] || '-'}</td>
+                        ))}
+                        <td className="pts-col">{rodada.total}</td>
+                      </tr>
+                    );
+                  });
+                })()}
               </tbody>
             </table>
           </div>
@@ -596,8 +807,24 @@ function App() {
             ))}
         </div>
       </div>
+      
+      {jogoIniciado && (
+        <div className="rodape-noticias">
+          <div className="ticker-wrapper">
+            <div className="ticker-content">
+              {gerarNoticias().map((noticia, idx) => (
+                <span key={idx} className="ticker-item">{noticia}</span>
+              ))}
+              {gerarNoticias().map((noticia, idx) => (
+                <span key={`dup-${idx}`} className="ticker-item">{noticia}</span>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 export default App;
+
